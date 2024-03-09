@@ -8,11 +8,10 @@
 void UpdateDrawFrame(void);
 
 int main(void) {
-    const int screenWidth = 800;
-    const int screenHeight = 600;
+    const int screenWidth = 1280;
+    const int screenHeight = 720;
 
     InitWindow(screenWidth, screenHeight, "Hello, World!");
-    SetTargetFPS(60);
 
     #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 0, 1);

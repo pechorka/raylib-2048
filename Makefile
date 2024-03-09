@@ -26,7 +26,7 @@ $(GAME_EXE): $(RAYLIB_5_AMD64_LIB)
 run: $(GAME_EXE)
 	./$(GAME_EXE)
 
-GAME_HTML = web/game.html
+GAME_HTML = web/game.js
 
 .PHONY: $(GAME_HTML)
 $(GAME_HTML): $(RAYLIB_5_WEB_LIB)

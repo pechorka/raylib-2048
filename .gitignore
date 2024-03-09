@@ -1,2 +1,3 @@
 game
-web/
+web/game.js
+web/game.wasm
