@@ -26,11 +26,11 @@ $(GAME_EXE): $(RAYLIB_5_AMD64_LIB)
 run: $(GAME_EXE)
 	./$(GAME_EXE)
 
-GAME_HTML = web/game.js
+GAME_HTML = game.js
 
 .PHONY: $(GAME_HTML)
 $(GAME_HTML): $(RAYLIB_5_WEB_LIB)
 	emcc -o $(GAME_HTML) game.c -Os -Wall $(INCLUDES) -Lraylib/5.0/lib -lraylib_web -s USE_GLFW=3 -DPLATFORM_WEB
 
 web: $(GAME_HTML)
-	python3 -m http.server --directory web/
+	python3 -m http.server
