@@ -2,8 +2,30 @@
 #include <raylib.h>
 #include <time.h>
 
+
+int get_high_score();
+void set_high_score(int score);
+int bestScore;
+
 #if defined(PLATFORM_WEB)
 #include <emscripten/emscripten.h>
+
+EM_JS(void, set_high_score, (int score), {
+  localStorage.setItem('highScore', score);
+});
+
+EM_JS(int, get_high_score, (), {
+  return parseInt(localStorage.getItem('highScore') || '0', 10);
+});
+#else
+int get_high_score() {
+  return bestScore;
+}
+
+void set_high_score(int score) {
+    bestScore = score;
+}
+
 #endif
 
 #define SCREEN_WIDTH 800
@@ -122,8 +144,6 @@ enum MoveState moveState;
 int freeSlotsCount;
 int maxCurrent2Power;
 
-int bestScore;
-
 int random_2_power(int max)
 {
     int power = rand() % (max) + 1;
@@ -176,6 +196,7 @@ void reset_game(void)
     }
 
     score = 0;
+    bestScore = get_high_score();
 
     currentDirection = 0;
     moveProgress = 0;
@@ -570,7 +591,7 @@ void UpdateDrawFrame(void)
     {
         reset_game();
     }
-    
+
     BeginDrawing();
 
     ClearBackground(RAYWHITE);
@@ -580,6 +601,7 @@ void UpdateDrawFrame(void)
         if (score > bestScore)
         {
             bestScore = score;
+            set_high_score(bestScore);
         }
         draw_game_over_screen();
     }
