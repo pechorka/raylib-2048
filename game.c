@@ -9,6 +9,13 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 800
 
+Rectangle screenRect = {
+    .x = 0,
+    .y = 0,
+    .width = SCREEN_WIDTH,
+    .height = SCREEN_HEIGHT,
+};
+
 #define BOARD_DIMENTION 4
 #define CELL_SIZE 60
 #define CELL_TEXT_SIZE 20
@@ -22,7 +29,8 @@ Rectangle boardRect = {
     .x = BOARD_X,
     .y = BOARD_Y,
     .width = BOARD_WIDTH,
-    .height = BOARD_HEIGHT};
+    .height = BOARD_HEIGHT,
+};
 
 #define CONTROL_SIZE 40
 #define CONTROL_TEXT_SIZE 30
@@ -38,31 +46,36 @@ Rectangle controlRect = {
     .x = CONTROL_PANEL_X,
     .y = CONTROL_PANEL_Y,
     .width = CONTROL_PANEL_WIDTH,
-    .height = CONTROL_PANEL_HEIGHT};
+    .height = CONTROL_PANEL_HEIGHT,
+};
 
 Rectangle upControlRect = {
     .x = (CONTROL_PANEL_WIDTH - CONTROL_SIZE) / 2 + CONTROL_PANEL_X,
     .y = CONTROL_PANEL_Y + CONTROL_PADDING,
     .width = CONTROL_SIZE,
-    .height = CONTROL_SIZE};
+    .height = CONTROL_SIZE,
+};
 
 Rectangle downControlRect = {
     .x = (CONTROL_PANEL_WIDTH - CONTROL_SIZE) / 2 + CONTROL_PANEL_X,
     .y = CONTROL_PANEL_Y + CONTROL_PANEL_HEIGHT - CONTROL_SIZE - CONTROL_PADDING,
     .width = CONTROL_SIZE,
-    .height = CONTROL_SIZE};
+    .height = CONTROL_SIZE,
+};
 
 Rectangle leftControlRect = {
     .x = CONTROL_PANEL_X + CONTROL_PADDING,
     .y = (CONTROL_PANEL_HEIGHT - CONTROL_SIZE) / 2 + CONTROL_PANEL_Y,
     .width = CONTROL_SIZE,
-    .height = CONTROL_SIZE};
+    .height = CONTROL_SIZE,
+};
 
 Rectangle rightControlRect = {
     .x = CONTROL_PANEL_X + CONTROL_PANEL_WIDTH - CONTROL_SIZE - CONTROL_PADDING,
     .y = (CONTROL_PANEL_HEIGHT - CONTROL_SIZE) / 2 + CONTROL_PANEL_Y,
     .width = CONTROL_SIZE,
-    .height = CONTROL_SIZE};
+    .height = CONTROL_SIZE,
+};
 
 void UpdateDrawFrame(void);
 void reset_game(void);
@@ -162,10 +175,6 @@ void reset_game(void)
         place_at_random_free_slot(random_2_power(maxCurrent2Power));
     }
 
-    if (score > bestScore)
-    {
-        bestScore = score;
-    }
     score = 0;
 
     currentDirection = 0;
@@ -200,12 +209,14 @@ Color get_color(int value)
     return (Color){r, g, b, 255};
 }
 
-void render_text_at_center_of_rect(char *text, Rectangle rect, int fontSize, Color color)
+Rectangle render_text_at_center_of_rect(char *text, Rectangle rect, int fontSize, Color color)
 {
     int textWidth = MeasureText(text, fontSize);
     int textX = rect.x + rect.width / 2 - textWidth / 2;
     int textY = rect.y + rect.height / 2 - fontSize / 2;
     DrawText(text, textX, textY, fontSize, color);
+
+    return (Rectangle){textX, textY, textWidth, fontSize};
 }
 
 void render_game(void)
@@ -510,26 +521,73 @@ void move(void)
     return;
 }
 
+void draw_game_over_screen(void) {
+    Rectangle borders = render_text_at_center_of_rect("Game Over", screenRect, 50, BLACK);
+    // draw restart button to the right of the text
+    char* restartText = "Restart";
+    int restartFontSize = 30;
+    int restartTextWidth = MeasureText(restartText, restartFontSize);
+    Rectangle restartButton = {
+        .x = borders.x + borders.width + 20,
+        .y = borders.y,
+        .width = restartTextWidth + 20,
+        .height = restartFontSize + 20,
+    };
+
+    Color restartButtonColor = BLACK;
+
+    if (CheckCollisionPointRec(GetMousePosition(), restartButton))
+    {
+        restartButtonColor = GREEN;
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+        {
+            reset_game();
+            return;
+        }
+    }
+
+    DrawRectangleLinesEx(restartButton, 2, restartButtonColor);
+    render_text_at_center_of_rect("Restart", restartButton, restartFontSize, restartButtonColor);
+
+    // draw score below "Game Over"
+    char scoreText[50];
+    sprintf(scoreText, "Score: %d", score);
+    int scoreX = borders.x;
+    int scoreY = borders.y + borders.height + 20;
+    DrawText(scoreText, scoreX, scoreY, 30, BLACK);
+
+    // draw best score below score
+    char bestScoreText[50];
+    sprintf(bestScoreText, "Best: %d", bestScore);
+    int bestScoreX = borders.x;
+    int bestScoreY = scoreY + 40;
+    DrawText(bestScoreText, bestScoreX, bestScoreY, 30, BLACK);
+}
+
 void UpdateDrawFrame(void)
 {
     if (IsKeyPressed(KEY_R))
     {
         reset_game();
-        return 0;
     }
-
+    
     BeginDrawing();
 
     ClearBackground(RAYWHITE);
 
     if (freeSlotsCount == 0)
     {
-        DrawText("Game Over. Press 'R' to restart.", 190, 200, 40, MAROON);
-        return;
+        if (score > bestScore)
+        {
+            bestScore = score;
+        }
+        draw_game_over_screen();
     }
-
-    move();
-    render_game();
+    else
+    {
+        move();
+        render_game();
+    }
 
     EndDrawing();
 }
