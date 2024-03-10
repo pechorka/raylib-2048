@@ -41,8 +41,12 @@ int main(void) {
 #define BOARD_SIZE (BOARD_DIMENTION * CELL_SIZE)
 
 int board[BOARD_DIMENTION][BOARD_DIMENTION];
-int free_slots_count;
+int score;
+
+int freeSlotsCount;
 int maxCurrent2Power;
+
+int bestScore;
 
 int random_2_power(int max) {
     int power = rand() % (max) + 1;
@@ -50,19 +54,19 @@ int random_2_power(int max) {
 }
 
 int place_at_random_free_slot(int value) {
-    if (free_slots_count == 0) {
+    if (freeSlotsCount == 0) {
         printf("No free slots\n");
         return 0;
     }
 
-    int nth_slot = rand() % free_slots_count+1;
-    printf("free_slots_count: %d\n", free_slots_count);
+    int nth_slot = rand() % freeSlotsCount+1;
+    printf("free_slots_count: %d\n", freeSlotsCount);
     printf("nth_slot: %d\n", nth_slot);
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
             if (board[i][j] == 0 && --nth_slot == 0) {
                 board[i][j] = value;
-                free_slots_count--;
+                freeSlotsCount--;
                 printf("Placed %d at %d, %d\n", value, i, j);
                 return 1;
             }
@@ -81,12 +85,17 @@ void reset_game(void) {
             board[i][j] = 0;
         }
     }
-    free_slots_count = BOARD_DIMENTION * BOARD_DIMENTION;
+    freeSlotsCount = BOARD_DIMENTION * BOARD_DIMENTION;
     maxCurrent2Power = 1;
 
     for (int i = 0; i < 2; i++) {
         place_at_random_free_slot(random_2_power(maxCurrent2Power));
     }
+
+    if (score > bestScore) {
+        bestScore = score;
+    }
+    score = 0;
 }
 
 Color get_color(int value) {
@@ -144,6 +153,16 @@ void render_board(void) {
             DrawText(text, textX, textY, CELL_TEXT_SIZE, BLACK);
         }
     }
+
+    // render score above the board
+    char scoreText[50];
+    sprintf(scoreText, "Score: %d", score);
+    DrawText(scoreText, board_rect.x, board_rect.y - 40, 30, BLACK);
+    // draw best score above score
+    char bestScoreText[50];
+    sprintf(bestScoreText, "Best: %d", bestScore);
+    DrawText(bestScoreText, board_rect.x, board_rect.y - 80, 30, BLACK);
+    
 }
 
 void move_cells_left() {
@@ -174,7 +193,9 @@ void merge_cells_left() {
             if (board[i][j] == board[i][j+1]) {
                 board[i][j] *= 2;
                 board[i][j+1] = 0;
-                free_slots_count++;
+
+                score += board[i][j];
+                freeSlotsCount++;
                 if (board[i][j] > (1 << maxCurrent2Power)) {
                     maxCurrent2Power++;
                 }
@@ -211,7 +232,9 @@ void merge_cells_right() {
             if (board[i][j] == board[i][j-1]) {
                 board[i][j] *= 2;
                 board[i][j-1] = 0;
-                free_slots_count++;
+
+                score += board[i][j];
+                freeSlotsCount++;
                 if (board[i][j] > (1 << maxCurrent2Power)) {
                     maxCurrent2Power++;
                 }
@@ -273,6 +296,11 @@ void UpdateDrawFrame(void) {
     BeginDrawing();
 
     ClearBackground(RAYWHITE);
+
+    if (freeSlotsCount == 0) {
+        DrawText("Game Over. Press 'R' to restart.", 190, 200, 40, MAROON);
+        return;
+    }
 
     if (handle_input()) place_at_random_free_slot(random_2_power(maxCurrent2Power));
     
